@@ -1,34 +1,54 @@
-// Budget API
+const mongoose = require("mongoose")
+const dataModel = require("./models/budgetdataschema")
 
-const express = require('express');
-const cors = require('cors');
+let url = 'mongodb://127.0.0.1:27017/budgetApp';
+
+const bodyParser = require("body-parser");
+const express = require("express");
+const cors = require("cors");
 const app = express();
 const port = 3000;
+app.use(bodyParser.json());
+app.use("/", express.static("public"));
 
 app.use(cors());
 
-const budget = {
-    myBudget: [
-        {
-            title: 'Eat out',
-            budget: 25
-        },
-        {
-            title: 'Rent',
-            budget: 275
-        },
-        {
-            title: 'Grocery',
-            budget: 110
-        },
-    ]
-};
-
-
-app.get('/budget', (req, res) => {
-    res.json(budget);
+app.get("/budget", (req, res) => {
+  mongoose
+    .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+      console.log("Connected to the database");
+      dataModel
+        .find({})
+        .then((data) => {
+          res.json(data);
+          console.log(data);
+          mongoose.connection.close();
+        })
+        .catch((connectionError) => {
+          console.log(connectionError);
+        });
+    });
 });
 
+app.post("/budget", (req, res) => {
+  mongoose
+    .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+      console.log("Connected to the database");
+      const newItem = new dataModel(req.body);
+      dataModel
+        .create(newItem)
+        .then((data) => {
+          res.json(data);
+          console.log(data);
+          mongoose.connection.close();
+        })
+        .catch((connectionError) => {
+          console.log(connectionError);
+        });
+    });
+});
 app.listen(port, () => {
-    console.log(`API served at http://localhost:${port}`);
+  console.log(`API served at http://localhost:${port}`);
 });
